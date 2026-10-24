@@ -1,0 +1,10 @@
+node_modules
+web/node_modules
+web/dist
+*.tsbuildinfo
+data
+.env
+.git
+.github
+deploy
+*.log

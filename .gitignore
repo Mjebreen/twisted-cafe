@@ -1,0 +1,17 @@
+node_modules
+web/node_modules
+web/dist
+*.tsbuildinfo
+
+# Runtime data: database, session secret, backups. Never commit.
+data/
+*.db
+*.db-wal
+*.db-shm
+.secret
+
+# Local config
+.env
+*.log
+.DS_Store
+Thumbs.db

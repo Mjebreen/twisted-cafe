@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+/* Theme tokens from the Twisted Minds Brand Guidelines 2026.
+ * Look: white pages, solid black and pink blocks, cyan accents, heavy rounded type.
+ * Brand font is SF Pro Rounded / SF Arabic Rounded (Apple; shows natively on iPhone/Mac via ui-rounded).
+ * Nunito and IBM Plex Sans Arabic are the web fallbacks (same pair as the Odoo theme). */
+@theme inline {
+  --font-display: "SF Pro Rounded", ui-rounded, "Nunito", "SF Arabic Rounded", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-sans: "SF Pro Rounded", ui-rounded, "Nunito", "SF Arabic Rounded", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-mono: "SF Pro Rounded", ui-rounded, "Nunito", system-ui, sans-serif;
+  --font-ar: "SF Arabic Rounded", "IBM Plex Sans Arabic", "Nunito", sans-serif;
+
+  /* Surfaces + ink */
+  --color-bg: #F3F3F6;        /* app canvas */
+  --color-panel: #FFFFFF;     /* cards */
+  --color-panel-2: #FAFAFC;   /* side panels */
+  --color-panel-3: #ECECF1;   /* neutral chips / buttons */
+  --color-border: #E2E2EA;
+  --color-muted: #6E6E7C;
+  --color-ink: #0B0B0F;       /* brand black */
+
+  /* Brand palette (fills) */
+  --color-primary: #FA4B69;   /* Twisted pink (main) */
+  --color-cyan: #03FBFE;
+  --color-red: #FB2747;
+  --color-blue: #0841D5;
+  --color-yellow: #E5E72E;
+
+  /* Text-safe roles on white */
+  --color-secondary: #0841D5; /* accent text = brand blue (cyan is unreadable on white) */
+  --color-danger: #FB2747;
+  --color-warn: #A16207;      /* readable amber; use bg-yellow for yellow fills */
+  --color-ok: #047857;        /* status only, not a brand colour */
+}
+
+:root { color-scheme: light; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0; min-height: 100%;
+  background: var(--color-bg); color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: rgba(250, 75, 105, 0.25); }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 900; letter-spacing: -0.01em; line-height: 1.05; }
+
+@utility font-stat {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Components live in a layer so Tailwind utilities (w-40, pl-9, …) can override them. */
+@layer components {
+  .input {
+    width: 100%;
+    background: var(--color-panel);
+    border: 1.5px solid var(--color-border);
+    border-radius: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    color: var(--color-ink);
+    font-size: 1rem;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .input::placeholder { color: #A3A3AF; font-weight: 500; }
+  .input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(250, 75, 105, 0.15); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+    border-radius: 999px; padding: 0.6rem 1.1rem; font-weight: 800;
+    border: 1.5px solid transparent; background: var(--color-panel-3); color: var(--color-ink);
+    transition: filter 0.15s, transform 0.06s, background 0.15s; user-select: none; cursor: pointer;
+  }
+  .btn:hover { filter: brightness(0.97); }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; pointer-events: none; }
+  .btn-primary { background: var(--color-primary); color: #fff; }
+  .btn-dark { background: var(--color-ink); color: #fff; }
+  .btn-cyan, .btn-ok { background: var(--color-cyan); color: var(--color-ink); }
+  .btn-blue { background: var(--color-blue); color: #fff; }
+  .btn-danger { background: transparent; border-color: var(--color-red); color: var(--color-red); }
+  .btn-ghost { background: transparent; }
+  .btn-ghost:hover { background: var(--color-panel-3); }
+
+  .card {
+    background: var(--color-panel);
+    border: 1.5px solid var(--color-border);
+    border-radius: 1.25rem;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.78rem; font-weight: 800;
+  }
+  .overlay { background: rgba(11, 11, 15, 0.55); backdrop-filter: blur(3px); }
+  .eyebrow { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-muted); }
+}
+
+html[dir="rtl"] body, html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3 { font-family: var(--font-ar); letter-spacing: 0; }
+.ar { font-family: var(--font-ar); }
+
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(250,75,105,0.6);} 100% { box-shadow: 0 0 0 14px rgba(250,75,105,0);} }
+.pulse { animation: pulse-ring 1.2s ease-out infinite; }
+@keyframes pop-in { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+.pop-in { animation: pop-in 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Receipt printing: 80mm thermal paper */
+@media print {
+  @page { size: 80mm auto; margin: 0; }
+  body { background: #fff !important; color: #000 !important; }
+  .no-print { display: none !important; }
+}
+.receipt { width: 72mm; margin: 0 auto; padding: 4mm 0; color: #000; background: #fff; font-family: 'Courier New', monospace; font-size: 12px; }
+.qr-sheet { background: #fff; color: #000; }

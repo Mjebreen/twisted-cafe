@@ -1,0 +1,29 @@
+# systemd unit for running Twisted Cafe without Docker.
+# Install: see README "Linux without Docker".
+[Unit]
+Description=Twisted Cafe POS
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=twistedcafe
+Group=twistedcafe
+WorkingDirectory=/opt/twisted-cafe
+EnvironmentFile=-/opt/twisted-cafe/.env
+Environment=NODE_ENV=production
+Environment=DATA_DIR=/var/lib/twisted-cafe
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning server/index.js
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/twisted-cafe
+
+[Install]
+WantedBy=multi-user.target

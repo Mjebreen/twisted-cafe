@@ -1,0 +1,24 @@
+services:
+  cafe:
+    build: .
+    image: twisted-cafe:latest
+    container_name: twisted-cafe
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: "8080"   # inside the container; the host port comes from PORT in .env
+    ports:
+      - "${PORT:-8080}:8080"
+    volumes:
+      - cafe-data:/data   # database + session secret + backups. Back this up (see README).
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  cafe-data:

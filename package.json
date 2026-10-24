@@ -1,0 +1,30 @@
+{
+  "name": "twisted-cafe",
+  "version": "1.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Internal POS for the Twisted Minds cafe: counter walk-ins, room QR orders, barista board, tabs, sales reports.",
+  "scripts": {
+    "dev": "concurrently -n api,web -c magenta,cyan \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "node --watch --disable-warning=ExperimentalWarning server/index.js",
+    "dev:web": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "postinstall": "npm --prefix web install",
+    "test": "node --disable-warning=ExperimentalWarning --test server/",
+    "mock": "node --disable-warning=ExperimentalWarning server/mock.js",
+    "mock:clear": "node --disable-warning=ExperimentalWarning server/mock.js --clear",
+    "backup": "node --disable-warning=ExperimentalWarning server/backup.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

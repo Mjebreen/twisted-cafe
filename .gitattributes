@@ -1,0 +1,6 @@
+# Keep LF line endings so scripts and Docker files work on Linux.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.db binary

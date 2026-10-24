@@ -1,0 +1,10 @@
+{
+  "name": "Twisted Cafe",
+  "short_name": "Cafe",
+  "start_url": "/staff",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0B0B0F",
+  "theme_color": "#0B0B0F",
+  "icons": [{ "src": "/logo.png", "sizes": "512x512", "type": "image/png" }]
+}

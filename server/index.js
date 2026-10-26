@@ -17,6 +17,7 @@ import {
 import { summary, itemsCsv, ordersCsv } from "./reports.js";
 import { importPos2 } from "./importPos2.js";
 import { auditMiddleware, setLogListener } from "./audit.js";
+import { allNames, duplicateGroups, mergeNames, ignorePair } from "./people.js";
 
 const PORT = Number(process.env.PORT || 8080);
 const HOST = process.env.HOST || "0.0.0.0";
@@ -417,6 +418,19 @@ app.post("/api/people", staff, (req, res) => {
   db.prepare("UPDATE people SET active = 1 WHERE name = ?").run(name);
   res.json({ ok: true });
 });
+// Every name used anywhere (employee list, orders, tabs), with how often.
+app.get("/api/people/names", admin, (_req, res) => res.json(allNames()));
+// Likely duplicates for the weekly clean-up.
+app.get("/api/people/duplicates", admin, (_req, res) => res.json(duplicateGroups()));
+// Merge names into one: orders, tab charges and tab payments move to the kept name.
+app.post("/api/people/merge", admin, (req, res) => {
+  const r = mergeNames(req.body?.into, req.body?.from);
+  io.to("staff").emit("tabs-changed");
+  res.json(r);
+});
+// "Not the same person": hide this group from duplicate suggestions.
+app.post("/api/people/ignore", admin, (req, res) => res.json(ignorePair(req.body?.names)));
+
 app.patch("/api/people/:id", admin, (req, res) => {
   const p = db.prepare("SELECT * FROM people WHERE id = ?").get(int(req.params.id));
   if (!p) throw new HttpError(404, "Not found");

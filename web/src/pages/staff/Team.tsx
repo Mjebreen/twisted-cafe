@@ -1,6 +1,7 @@
 // Admin: staff logins (PINs) and the employee list used for names / tabs.
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Combine, Plus } from "lucide-react";
+import { MergeNames } from "./MergeNames";
 import { api } from "../../lib/api";
 import { useStaff } from "./StaffContext";
 import { useToast } from "../../components/Toast";
@@ -15,10 +16,13 @@ export default function Team() {
   const [people, setPeople] = useState<P[]>([]);
   const [nu, setNu] = useState({ name: "", pin: "", role: "staff" });
   const [np, setNp] = useState("");
+  const [merging, setMerging] = useState(false);
+  const [dupes, setDupes] = useState(0);
   const load = () => {
     void api<U[]>("/api/users").then(setUsers);
     void api<P[]>("/api/people").then(setPeople);
     reloadPeople();
+    void api<unknown[]>("/api/people/duplicates").then((g) => setDupes(g.length)).catch(() => {});
   };
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
   const run = async (fn: () => Promise<unknown>, ok?: string) => {
@@ -61,7 +65,14 @@ export default function Team() {
       </section>
 
       <section>
-        <h1 className="text-4xl">Employees</h1>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-4xl">Employees</h1>
+          <div className="flex-1" />
+          <button className="btn btn-dark" onClick={() => setMerging(true)}>
+            <Combine size={16} /> Merge names
+            {dupes > 0 && <span className="chip bg-primary text-white">{dupes} to check</span>}
+          </button>
+        </div>
         <p className="text-sm text-muted">Names suggested when ordering from rooms and when charging a tab. New names from room orders are added automatically.</p>
         <div className="card p-3 mt-3 flex gap-2">
           <input className="input flex-1" placeholder="Employee name" value={np} onChange={(e) => setNp(e.target.value)}
@@ -85,6 +96,7 @@ export default function Team() {
           ))}
         </div>
       </section>
+      {merging && <MergeNames onClose={() => { setMerging(false); load(); }} onChanged={load} />}
     </div>
   );
 }

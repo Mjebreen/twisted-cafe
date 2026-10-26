@@ -88,6 +88,15 @@ In POS2, export tenant data, then unzip `tenant-data-export.zip`. Then either:
 
 It brings in products (as Hot Drinks / Cold Drinks), the Coffee Type options, tables as rooms (POS2 table PIN becomes the room code, the "Counter" table is skipped), and order history. Running it again updates the menu and skips orders already imported. Orders deleted in POS2 are not imported. Product images are not in the export.
 
+## Merging employee names
+
+People type their names differently ("Sara", "sara ahmed", "Sarah Ahmed"). Once a week, open **Team → Merge names**:
+
+- **Possible duplicates** lists names that look alike (capitals, extra spaces, small spelling slips, a first name vs the full name, Arabic letter variants like أ/ا and ة/ه). Pick the name to keep, untick any that don't belong, and merge, or press **Not the same person** so that group is never suggested again.
+- **Pick names myself** lets you select any names and type the correct spelling to keep.
+
+Merging moves every past order, tab charge and tab payment to the kept name, so tab balances and reports combine. It can't be undone, and each merge is recorded in the activity log.
+
 ## Discount codes
 
 Admins manage codes in **Discounts**: percent or fixed SAR off, optional max discount, minimum order, start/end dates, total uses, once per person (by order name), and counter-only / rooms-only / both. Staff apply a code in the counter cart; room customers tap "Have a discount code?" in their cart. The server re-checks every rule when the order is placed, so a code can't be faked from a phone. Receipts, the board, the customer status page, the orders CSV and Reports (Discounts tile + "Discount codes" table) all show it. Refused codes appear in the activity log.

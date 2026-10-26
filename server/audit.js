@@ -130,6 +130,10 @@ function describe(req, res, before, body) {
       return ok ? { category: "room", message: "New codes for all rooms" } : null;
     case "DELETE /api/rooms/:id":
       return ok ? { category: "room", message: `Removed room "${before?.name}"` } : null;
+    case "POST /api/people/merge":
+      return ok ? { category: "team", message: `Merged ${(body?.from || []).map((n) => `"${n}"`).join(", ")} into "${body?.into}" (${body?.orders} orders, ${body?.tabOrders} tab charges, ${body?.tabPayments} tab payments)` } : null;
+    case "POST /api/people/ignore":
+      return ok ? { category: "team", message: `Marked as different people: ${(b.names || []).map((n) => `"${n}"`).join(", ")}` } : null;
     case "POST /api/people":
       return ok ? { category: "team", message: `Added employee "${b.name}"` } : null;
     case "PATCH /api/people/:id":

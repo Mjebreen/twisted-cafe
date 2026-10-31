@@ -8,6 +8,8 @@ COPY . .
 RUN npm run build
 
 FROM node:24-alpine
+LABEL org.opencontainers.image.source="https://github.com/Mjebreen/twisted-cafe" \
+      org.opencontainers.image.description="Twisted Cafe POS: counter, room QR orders, barista board"
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8080 \

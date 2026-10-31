@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, Route, Switch } from "wouter";
 import {
-  BarChart3, ClipboardList, ScrollText, TicketPercent, Coffee, Delete, DoorOpen, LogOut, NotebookPen, Settings as Cog, ShoppingCart, Users, Volume2, VolumeX,
+  BarChart3, ClipboardList, Gift, ScrollText, TicketPercent, Coffee, Delete, DoorOpen, LogOut, NotebookPen, Settings as Cog, ShoppingCart, Users, Volume2, VolumeX,
 } from "lucide-react";
 import { api, type User } from "../../lib/api";
 import { reconnectSocket, unlockAudio } from "../../lib/realtime";
@@ -18,6 +18,7 @@ import Team from "./Team";
 import SettingsPage from "./SettingsPage";
 import Logs from "./Logs";
 import Discounts from "./Discounts";
+import Rewards from "./Rewards";
 
 export default function StaffApp() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -119,6 +120,7 @@ function Shell() {
     { href: "/staff", label: "Counter", icon: ShoppingCart },
     { href: "/staff/orders", label: "Orders", icon: ClipboardList, badge: waiting },
     { href: "/staff/tabs", label: "Tabs", icon: NotebookPen },
+    { href: "/staff/rewards", label: "Rewards", icon: Gift },
     { href: "/staff/reports", label: "Reports", icon: BarChart3 },
     ...(admin ? [
       { href: "/staff/menu", label: "Menu", icon: Coffee },
@@ -166,6 +168,7 @@ function Shell() {
           <Route path="/staff"><Counter /></Route>
           <Route path="/staff/orders"><Board /></Route>
           <Route path="/staff/tabs"><Tabs /></Route>
+          <Route path="/staff/rewards"><Rewards /></Route>
           <Route path="/staff/reports"><Reports /></Route>
           {admin && <Route path="/staff/menu"><MenuAdmin /></Route>}
           {admin && <Route path="/staff/rooms"><RoomsAdmin /></Route>}

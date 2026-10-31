@@ -1,0 +1,26 @@
+# Install on a server without the source code:
+#   mkdir -p /opt/twisted-cafe && cd /opt/twisted-cafe
+#   curl -fsSLO https://raw.githubusercontent.com/Mjebreen/twisted-cafe/main/deploy/compose.yml
+#   docker compose -f compose.yml up -d
+# Update later:  docker compose -f compose.yml pull && docker compose -f compose.yml up -d
+services:
+  cafe:
+    image: ghcr.io/mjebreen/twisted-cafe:latest
+    container_name: twisted-cafe
+    restart: unless-stopped
+    environment:
+      TZ_CAFE: Asia/Riyadh
+      # COOKIE_SECURE: "1"   # turn on when served over HTTPS (Cloudflare Tunnel / reverse proxy)
+    ports:
+      - "8080:8080"           # change the left side to use another port on the server
+    volumes:
+      - cafe-data:/data       # database + session secret + backups
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  cafe-data:

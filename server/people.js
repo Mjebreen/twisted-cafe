@@ -123,6 +123,7 @@ export function mergeNames(into, from) {
       out.orders += Number(db.prepare("UPDATE orders SET customer_name = ? WHERE customer_name = ? COLLATE NOCASE").run(target, s).changes);
       out.tabOrders += Number(db.prepare("UPDATE orders SET tab_name = ? WHERE tab_name = ? COLLATE NOCASE").run(target, s).changes);
       out.tabPayments += Number(db.prepare("UPDATE tab_payments SET tab_name = ? WHERE tab_name = ? COLLATE NOCASE").run(target, s).changes);
+      db.prepare("UPDATE reward_ledger SET name = ? WHERE name = ? COLLATE NOCASE").run(target, s);
       if (s.toLowerCase() !== target.toLowerCase()) {
         out.removed += Number(db.prepare("DELETE FROM people WHERE name = ? COLLATE NOCASE").run(s).changes);
       }
@@ -131,6 +132,7 @@ export function mergeNames(into, from) {
     db.prepare("UPDATE orders SET customer_name = ? WHERE customer_name = ? COLLATE NOCASE AND customer_name != ?").run(target, target, target);
     db.prepare("UPDATE orders SET tab_name = ? WHERE tab_name = ? COLLATE NOCASE AND tab_name != ?").run(target, target, target);
     db.prepare("UPDATE tab_payments SET tab_name = ? WHERE tab_name = ? COLLATE NOCASE AND tab_name != ?").run(target, target, target);
+    db.prepare("UPDATE reward_ledger SET name = ? WHERE name = ? COLLATE NOCASE AND name != ?").run(target, target, target);
     // Keep exactly one employee entry, spelled as chosen.
     const existing = db.prepare("SELECT id FROM people WHERE name = ? COLLATE NOCASE").get(target);
     if (existing) db.prepare("UPDATE people SET name = ?, active = 1 WHERE id = ?").run(target, existing.id);

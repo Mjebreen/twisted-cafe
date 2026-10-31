@@ -3,6 +3,7 @@ import { Banknote, CreditCard, Gift, NotebookPen, X } from "lucide-react";
 import type { PayMethod } from "../lib/api";
 import { Money } from "./Money";
 import { fmt } from "../lib/format";
+import { NameInput } from "./NameInput";
 
 const METHODS: { id: PayMethod; label: string; icon: typeof Banknote }[] = [
   { id: "cash", label: "Cash", icon: Banknote },
@@ -85,15 +86,7 @@ export function PayDialog({
         )}
         {method === "tab" && (
           <div className="mt-4">
-            <input
-              className="input"
-              list="people-list"
-              placeholder="Whose tab?"
-              value={tab}
-              onChange={(e) => setTab(e.target.value)}
-              autoFocus
-            />
-            <datalist id="people-list">{people.map((p) => <option key={p} value={p} />)}</datalist>
+            <NameInput value={tab} onChange={setTab} names={people} placeholder="Whose tab?" autoFocus />
           </div>
         )}
         {method === "free" && <p className="mt-4 text-sm text-muted">Counts as complimentary. Not included in sales.</p>}

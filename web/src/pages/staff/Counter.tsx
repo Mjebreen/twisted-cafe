@@ -1,6 +1,6 @@
 // Counter POS: tap items, build the order, take payment, send to bar.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Ban, Minus, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
+import { Ban, Gift, Minus, Plus, Search, ShoppingBag, Trash2, X } from "lucide-react";
 import {
   api, cartPayload, lineKey, lineLabel, lineUnit, type CartLine, type DiscountPreview, type Item, type Order, type PayMethod,
 } from "../../lib/api";
@@ -10,6 +10,7 @@ import { ItemPicker } from "../../components/ItemPicker";
 import { PayDialog } from "../../components/PayDialog";
 import { useToast } from "../../components/Toast";
 import { DiscountBox } from "../../components/DiscountBox";
+import { NameInput } from "../../components/NameInput";
 
 export default function Counter() {
   const { menu, rooms, people, upsertOrder, printOrder, settings, reloadPeople, orders } = useStaff();
@@ -58,7 +59,25 @@ export default function Counter() {
   const subtotal = cart.reduce((s, l) => s + lineUnit(l) * l.qty, 0);
   const count = cart.reduce((s, l) => s + l.qty, 0);
   const [discount, setDiscount] = useState<DiscountPreview | null>(null);
-  const total = subtotal - (discount?.amount ?? 0);
+  // Reward points: staff-only. Look up the typed name's balance; "Use points" takes off as much as the order allows.
+  const rewardsOn = settings?.rewardsEnabled === "1";
+  const perSar = Math.max(1, Number(settings?.rewardPointsPerSar) || 20);
+  const [balance, setBalance] = useState<{ name: string; points: number } | null>(null);
+  const [usePoints, setUsePoints] = useState(false);
+  useEffect(() => {
+    setUsePoints(false);
+    const n = name.trim();
+    if (!rewardsOn || n.length < 2) { setBalance(null); return; }
+    const t = setTimeout(() => {
+      api<{ name: string; points: number }>(`/api/rewards/balance?name=${encodeURIComponent(n)}`)
+        .then((b) => setBalance(b.points > 0 ? b : null)).catch(() => setBalance(null));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [name, rewardsOn]);
+  const afterCode = subtotal - (discount?.amount ?? 0);
+  const pointsUsed = usePoints && balance ? Math.min(balance.points, Math.ceil((afterCode * perSar) / 100)) : 0;
+  const pointsOff = pointsUsed ? Math.min(afterCode, Math.floor((pointsUsed * 100) / perSar)) : 0;
+  const total = afterCode - pointsOff;
   const checkDiscount = (code: string) =>
     api<DiscountPreview>("/api/discounts/check", {
       body: { code, items: cartPayload(cart), customerName: name, roomId: roomId || null },
@@ -86,10 +105,11 @@ export default function Counter() {
         body: {
           items: cartPayload(cart), customerName: name, note, payment, roomId: roomId || null, sendToBar: toBar,
           discountCode: discount?.code ?? null,
+          rewardPoints: pointsOff > 0 ? pointsUsed : null,
         },
       });
       upsertOrder(o);
-      setCart([]); setName(""); setNote(""); setRoomId(""); setToBar(true); setPaying(false); setDiscount(null);
+      setCart([]); setName(""); setNote(""); setRoomId(""); setToBar(true); setPaying(false); setDiscount(null); setUsePoints(false); setBalance(null);
       if (payment?.method === "tab") reloadPeople();
       if (settings?.autoPrintCounter === "1" && payment) printOrder(o.id);
       toast(`Order #${o.number} ${payment ? "paid" : "saved, unpaid"}`, "ok", { label: "Print", run: () => printOrder(o.id) });
@@ -145,8 +165,7 @@ export default function Counter() {
       {/* Cart side */}
       <aside className="w-[340px] lg:w-[390px] shrink-0 border-l border-border bg-panel flex flex-col">
         <div className="p-3 space-y-2 border-b border-border">
-          <input className="input" list="counter-people" placeholder="Customer name (optional)" value={name} onChange={(e) => setName(e.target.value)} />
-          <datalist id="counter-people">{people.map((p) => <option key={p} value={p} />)}</datalist>
+          <NameInput value={name} onChange={setName} names={people} placeholder="Customer name (optional)" onOpen={reloadPeople} />
           <select className="input" value={roomId} onChange={(e) => setRoomId(e.target.value ? Number(e.target.value) : "")}>
             <option value="">Walk-in (counter)</option>
             {rooms.filter((r) => r.active).map((r) => <option key={r.id} value={r.id}>Deliver to {r.name}</option>)}
@@ -177,17 +196,38 @@ export default function Counter() {
           {cart.length > 0 && (
             <DiscountBox applied={discount} onApply={async (c) => setDiscount(await checkDiscount(c))} onRemove={() => setDiscount(null)} />
           )}
+          {cart.length > 0 && balance && (
+            usePoints && pointsOff > 0 ? (
+              <div className="flex items-center gap-2 rounded-2xl bg-primary/10 border border-primary px-3 py-2">
+                <Gift size={18} className="shrink-0 text-primary" />
+                <span className="font-extrabold">{pointsUsed} points</span>
+                <span className="text-sm font-semibold text-muted truncate">{balance.points - pointsUsed} left</span>
+                <span className="flex-1" />
+                <span className="font-stat">−<Money v={pointsOff} /></span>
+                <button className="btn btn-ghost p-1.5" onClick={() => setUsePoints(false)} aria-label="Don't use points"><X size={16} /></button>
+              </div>
+            ) : (
+              <button className="w-full flex items-center gap-2 rounded-2xl border-[1.5px] border-dashed border-primary px-3 py-2 text-left disabled:opacity-50"
+                disabled={Math.floor((balance.points * 100) / perSar) < 1 || afterCode <= 0} onClick={() => setUsePoints(true)}>
+                <Gift size={18} className="shrink-0 text-primary" />
+                <span className="font-bold truncate">{balance.name}: {balance.points} points</span>
+                <span className="text-sm text-muted">(<Money v={Math.floor((balance.points * 100) / perSar)} />)</span>
+                <span className="flex-1" />
+                <span className="text-sm font-extrabold text-primary whitespace-nowrap">Use points</span>
+              </button>
+            )
+          )}
           <input className="input py-2 text-sm" placeholder="Order note" value={note} onChange={(e) => setNote(e.target.value)} />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={toBar} onChange={(e) => setToBar(e.target.checked)} className="h-5 w-5 accent-[#FA4B69]" />
             Send to barista board (untick if handed over now)
           </label>
           <div className="flex items-center justify-between text-xl">
-            <span className="text-muted">{count} items{discount ? <> · <s><Money v={subtotal} /></s></> : null}</span>
+            <span className="text-muted">{count} items{discount || pointsOff ? <> · <s><Money v={subtotal} /></s></> : null}</span>
             <Money v={total} className="text-4xl" />
           </div>
           <div className="flex gap-2">
-            <button className="btn flex-1 py-3" disabled={!cart.length} onClick={() => { setCart([]); setDiscount(null); }}>Clear</button>
+            <button className="btn flex-1 py-3" disabled={!cart.length} onClick={() => { setCart([]); setDiscount(null); setUsePoints(false); }}>Clear</button>
             <button className="btn btn-primary flex-[2] py-3 text-lg" disabled={!cart.length || busy} onClick={() => setPaying(true)}>
               Charge
             </button>

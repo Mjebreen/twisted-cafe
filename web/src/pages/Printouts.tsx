@@ -56,10 +56,11 @@ export function Receipt({ id }: { id: string }) {
         ))}
         {o.note && <div style={{ marginTop: 4 }}>Note: {o.note}</div>}
         <hr style={{ borderTop: "1px dashed #000", margin: "6px 0" }} />
-        {o.discount > 0 && (
+        {(o.discount > 0 || o.reward_discount > 0) && (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between" }}><span>Subtotal</span><span>{fmt(o.subtotal ?? o.total + o.discount)}</span></div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}><span>Discount ({o.discount_code})</span><span>-{fmt(o.discount)}</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}><span>Subtotal</span><span>{fmt(o.subtotal ?? o.total + o.discount + (o.reward_discount || 0))}</span></div>
+            {o.discount > 0 && <div style={{ display: "flex", justifyContent: "space-between" }}><span>Discount ({o.discount_code})</span><span>-{fmt(o.discount)}</span></div>}
+            {o.reward_discount > 0 && <div style={{ display: "flex", justifyContent: "space-between" }}><span>Reward points ({o.reward_points})</span><span>-{fmt(o.reward_discount)}</span></div>}
           </>
         )}
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 700 }}>
@@ -95,22 +96,39 @@ export function QrSheet() {
     <div className="qr-sheet min-h-screen">
       <div className="no-print p-3 flex gap-2 bg-panel">
         <button className="btn btn-primary" onClick={() => window.print()}>Print</button>
-        <span className="text-ink self-center text-sm">A4: 4 cards per page. Cut along the dashed lines.</span>
+        <span className="text-ink self-center text-sm">A4 landscape: 2 A5 cards per sheet. Cut along the dashed line. In the print dialog pick A4 and Landscape.</span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, padding: "8mm" }}>
-        {rooms.map((r) => (
-          <div key={r.id} style={{ border: "1px dashed #999", padding: "8mm", textAlign: "center", breakInside: "avoid", height: "128mm" }}>
-            <img src="/logo.png" alt="" style={{ height: 40, margin: "0 auto" }} />
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 28 }}>{s?.cafeName}</div>
-            <div style={{ fontSize: 14 }}>Scan to order to your room · امسح للطلب</div>
-            <img src={`/api/rooms/${r.id}/qr.svg`} alt="" style={{ width: "55mm", height: "55mm", margin: "4mm auto" }} />
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{r.name}</div>
-            <div style={{ fontSize: 13, marginTop: 4 }}>Room code · رمز الغرفة</div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 40, fontWeight: 800, color: "#FA4B69", letterSpacing: "0.3em" }}>{r.code}</div>
+      <div className="qr-pages">
+        {Array.from({ length: Math.ceil(rooms.length / 2) }, (_, i) => rooms.slice(i * 2, i * 2 + 2)).map((pair, i) => (
+          <div key={i} className="qr-sheet-a4">
+            {pair.map((r) => (
+          <div key={r.id} className="qr-page">
+            <img src="/logo.png" alt="" style={{ height: "16mm", margin: "0 auto" }} />
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 34, marginTop: "3mm" }}>{s?.cafeName}</div>
+            <div style={{ fontSize: 16 }}>Scan to order to your room · امسح للطلب</div>
+            <img src={`/api/rooms/${r.id}/qr.svg`} alt="" style={{ width: "95mm", height: "95mm", margin: "6mm auto" }} />
+            <div style={{ fontSize: 30, fontWeight: 800 }}>{r.name}</div>
+            <div style={{ fontSize: 15, marginTop: "3mm" }}>Room code · رمز الغرفة</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 54, fontWeight: 800, color: "#FA4B69", letterSpacing: "0.3em", lineHeight: 1.1 }}>{r.code}</div>
+          </div>
+            ))}
           </div>
         ))}
       </div>
-      <style>{"@media print { @page { size: A4; margin: 0; } }"}</style>
+      <style>{`
+        .qr-pages { display: flex; flex-direction: column; align-items: center; gap: 8mm; padding: 8mm; background: #eee; }
+        .qr-sheet-a4 { width: 297mm; height: 210mm; display: flex; background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.15); overflow: hidden; }
+        .qr-page { width: 148.5mm; height: 210mm; box-sizing: border-box; padding: 10mm; text-align: center;
+          display: flex; flex-direction: column; justify-content: center; }
+        .qr-page:first-child { border-right: 0.3mm dashed #999; }
+        .qr-page:only-child { border-right: 0.3mm dashed #999; }
+        @media print {
+          @page { size: A4 landscape; margin: 0; }
+          .qr-pages { display: block; padding: 0; gap: 0; background: #fff; }
+          .qr-sheet-a4 { box-shadow: none; break-after: page; page-break-after: always; }
+          .qr-sheet-a4:last-child { break-after: auto; page-break-after: auto; }
+        }
+      `}</style>
     </div>
   );
 }

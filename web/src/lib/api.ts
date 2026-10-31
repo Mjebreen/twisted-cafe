@@ -41,14 +41,14 @@ export type Order = {
   id: number; number: number; local_day: string; token: string; source: "counter" | "room";
   room_id: number | null; room_name: string | null; customer_name: string; note: string; status: OrderStatus;
   pay_pref: string | null; payment_status: "unpaid" | "paid"; payment_method: PayMethod | null; tab_name: string | null;
-  created_by: number | null; total: number; subtotal: number | null; discount: number; discount_code: string | null; cancel_reason: string | null; created_by_name: string | null; paid_by_name: string | null;
+  created_by: number | null; total: number; subtotal: number | null; discount: number; discount_code: string | null; reward_points: number; reward_discount: number; cancel_reason: string | null; created_by_name: string | null; paid_by_name: string | null;
   created_at: string; updated_at: string; ready_at: string | null; completed_at: string | null; paid_at: string | null;
   items: OrderItem[];
 };
 export type PublicOrder = Pick<Order, "token" | "number" | "status" | "room_name" | "customer_name" | "total" |
   "payment_status" | "payment_method" | "pay_pref" | "note" | "created_at" | "ready_at"> & {
   room_slug: string | null;
-  subtotal: number; discount: number; discount_code: string | null;
+  subtotal: number; discount: number; discount_code: string | null; reward_discount: number;
   items: { name: string; qty: number; options_text: string; note: string; line_total: number }[];
 };
 export type DiscountPreview = { code: string; label: string; amount: number; subtotal: number; total: number };
@@ -62,6 +62,7 @@ export type User = { id: number; name: string; role: "admin" | "staff" };
 export type Settings = {
   cafeName: string; timezone: string; vatRate: string; vatNumber: string; receiptFooter: string;
   roomOrdering: "open" | "closed"; publicUrl: string; autoPrintCounter: string;
+  rewardsEnabled: string; rewardEarnPerSar: string; rewardPointsPerSar: string;
 };
 
 /** Cart line used by both the counter and the room ordering page. */

@@ -245,8 +245,7 @@ function Gate({ slug, t, onDone }: { slug: string; t: (typeof T)["en"]; onDone: 
           onDone({ code: code.trim(), name: name.trim() });
         }}>
           <label className="block text-2xl font-black mb-3">{t.name}</label>
-          <input className="input text-lg" list="tc-people" autoFocus value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
-          <datalist id="tc-people">{people.map((p) => <option key={p} value={p} />)}</datalist>
+          <input className="input text-lg" autoFocus autoComplete="name" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
           <button className="btn btn-primary w-full mt-5 py-3.5 text-lg" disabled={name.trim().length < 2}>{t.start}</button>
         </form>
       )}

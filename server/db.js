@@ -157,6 +157,8 @@ const orderCols2 = db.prepare("PRAGMA table_info(orders)").all().map((c) => c.na
 if (!orderCols2.includes("subtotal")) db.exec("ALTER TABLE orders ADD COLUMN subtotal INTEGER");
 if (!orderCols2.includes("discount")) db.exec("ALTER TABLE orders ADD COLUMN discount INTEGER NOT NULL DEFAULT 0");
 if (!orderCols2.includes("discount_code")) db.exec("ALTER TABLE orders ADD COLUMN discount_code TEXT");
+if (!orderCols2.includes("reward_points")) db.exec("ALTER TABLE orders ADD COLUMN reward_points INTEGER NOT NULL DEFAULT 0");
+if (!orderCols2.includes("reward_discount")) db.exec("ALTER TABLE orders ADD COLUMN reward_discount INTEGER NOT NULL DEFAULT 0");
 // Orders written by importers/older versions have no subtotal: it equals the total.
 db.exec("UPDATE orders SET subtotal = total WHERE subtotal IS NULL");
 db.exec("CREATE INDEX IF NOT EXISTS idx_orders_dcode ON orders(discount_code)");
@@ -170,6 +172,9 @@ export const DEFAULT_SETTINGS = {
   roomOrdering: "open",     // open | closed
   publicUrl: "",            // base URL printed in room QR codes, e.g. http://192.168.1.50:8080
   autoPrintCounter: "0",    // auto-open receipt after a counter sale
+  rewardsEnabled: "1",      // employee reward points (staff-only)
+  rewardEarnPerSar: "1",    // points earned per 1 SAR paid
+  rewardPointsPerSar: "20", // points that make 1 SAR off (20 → 5% back)
 };
 
 export function getSettings() {

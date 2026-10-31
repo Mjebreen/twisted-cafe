@@ -11,6 +11,7 @@ const CATS: { id: string; label: string; cls: string }[] = [
   { id: "order", label: "Orders", cls: "bg-primary text-white" },
   { id: "payment", label: "Payments", cls: "bg-cyan text-ink" },
   { id: "tab", label: "Tabs", cls: "bg-blue text-white" },
+  { id: "reward", label: "Rewards", cls: "bg-cyan text-ink" },
   { id: "menu", label: "Menu", cls: "bg-yellow text-ink" },
   { id: "room", label: "Rooms", cls: "bg-ink text-white" },
   { id: "auth", label: "Sign-ins", cls: "bg-panel-3 text-ink" },

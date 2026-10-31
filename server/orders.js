@@ -1,6 +1,7 @@
 // Order creation, status changes, payments, and read helpers.
 import crypto from "node:crypto";
 import { db, getSettings, tx } from "./db.js";
+import { planRedeem, writeRedeem, syncOrderRewards } from "./rewards.js";
 
 export const STATUSES = ["new", "preparing", "ready", "completed", "cancelled"];
 export const PAY_METHODS = ["cash", "card", "tab", "free"];
@@ -90,7 +91,7 @@ export function upsertPerson(name) {
   if (n) db.prepare("INSERT INTO people(name) VALUES(?) ON CONFLICT(name) DO NOTHING").run(n);
 }
 
-export function createOrder({ source, room, customerName, note, lines, payPref, payment, status, userId, discountCode }) {
+export function createOrder({ source, room, customerName, note, lines, payPref, payment, status, userId, discountCode, rewardPoints }) {
   return tx(() => {
     const now = new Date();
     const { day, hour } = localParts(now);
@@ -99,16 +100,19 @@ export function createOrder({ source, room, customerName, note, lines, payPref, 
     const subtotal = lines.reduce((s, l) => s + l.line_total, 0);
     const d = discountCode ? evaluateDiscount(discountCode, { subtotal, source, customerName }) : null;
     const discount = d?.amount ?? 0;
-    const total = subtotal - discount;
+    const red = rewardPoints ? planRedeem(customerName, rewardPoints, subtotal - discount) : null;
+    const total = subtotal - discount - (red?.amount ?? 0);
     const iso = now.toISOString();
     const token = crypto.randomBytes(12).toString("base64url");
     const id = db.prepare(`
       INSERT INTO orders(number, local_day, local_hour, token, source, room_id, room_name, customer_name, note,
-        status, pay_pref, total, subtotal, discount, discount_code, created_by, created_at, updated_at, completed_at)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+        status, pay_pref, total, subtotal, discount, discount_code, created_by, created_at, updated_at, completed_at,
+        reward_points, reward_discount)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
       number, day, hour, token, source, room?.id ?? null, room?.name ?? null,
       cleanText(customerName, 60), cleanText(note, 300), status || "new", payPref || null, total, subtotal, discount,
       d?.code.code ?? null, userId ?? null, iso, iso, status === "completed" ? iso : null,
+      red?.points ?? 0, red?.amount ?? 0,
     ).lastInsertRowid;
     const ins = db.prepare(`INSERT INTO order_items(order_id, item_id, name, category_name, qty, unit_price,
       options_text, note, line_total) VALUES(?,?,?,?,?,?,?,?,?)`);
@@ -116,7 +120,9 @@ export function createOrder({ source, room, customerName, note, lines, payPref, 
       ins.run(id, l.item_id, l.name, l.category_name, l.qty, l.unit_price, l.options_text, l.note, l.line_total);
     }
     if (customerName && source === "room") upsertPerson(customerName);
+    if (red) writeRedeem(Number(id), customerName, red.points, userId);
     if (payment) applyPayment(Number(id), payment.method, payment.tabName, userId);
+    syncOrderRewards(Number(id));
     return Number(id);
   });
 }
@@ -171,13 +177,14 @@ export function payOrder(id, method, tabName, userId) {
   const o = getOrderRow(id);
   if (o.status === "cancelled") throw new HttpError(409, "Order is cancelled");
   if (o.payment_status === "paid") throw new HttpError(409, "Order already paid");
-  applyPayment(id, method, tabName, userId);
+  tx(() => { applyPayment(id, method, tabName, userId); syncOrderRewards(id); });
 }
 
 export function unpayOrder(id) {
   getOrderRow(id);
   db.prepare(`UPDATE orders SET payment_status='unpaid', payment_method=NULL, tab_name=NULL, paid_at=NULL, paid_by=NULL,
     updated_at=? WHERE id=?`).run(nowIso(), id);
+  syncOrderRewards(id);
 }
 
 export function setStatus(id, status, reason) {
@@ -190,6 +197,7 @@ export function setStatus(id, status, reason) {
       completed_at = CASE WHEN ?='completed' THEN ? ELSE completed_at END,
       cancel_reason = CASE WHEN ?='cancelled' THEN ? ELSE cancel_reason END
     WHERE id=?`).run(status, iso, status, iso, status, iso, status, cleanText(reason, 200) || null, id);
+  if (status === "cancelled") syncOrderRewards(id);
 }
 
 function getOrderRow(id) {
@@ -244,7 +252,7 @@ export function publicOrder(o) {
   if (!o) return null;
   return {
     token: o.token, number: o.number, status: o.status, room_name: o.room_name, room_slug: o.room_slug, customer_name: o.customer_name,
-    total: o.total, subtotal: o.subtotal ?? o.total, discount: o.discount || 0, discount_code: o.discount_code,
+    total: o.total, subtotal: o.subtotal ?? o.total, discount: o.discount || 0, discount_code: o.discount_code, reward_discount: o.reward_discount || 0,
     payment_status: o.payment_status, payment_method: o.payment_method, pay_pref: o.pay_pref,
     note: o.note, created_at: o.created_at, ready_at: o.ready_at,
     items: o.items.map((i) => ({ name: i.name, qty: i.qty, options_text: i.options_text, note: i.note, line_total: i.line_total })),

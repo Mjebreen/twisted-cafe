@@ -173,6 +173,7 @@ function OrderCard({ o }: { o: Order }) {
       <div className="mt-2 flex items-center gap-2 text-sm">
         <Money v={o.total} className="font-semibold" />
         {o.discount_code && <span className="chip bg-yellow text-ink" title={`Discount −${o.discount / 100}`}>{o.discount_code}</span>}
+        {o.reward_points > 0 && <span className="chip bg-primary/10 text-primary" title={`Points −${o.reward_discount / 100}`}>{o.reward_points} pts</span>}
         {o.payment_status === "paid" ? (
           <span className="chip bg-cyan text-ink">
             {PAY_LABEL[o.payment_method || ""]}{o.tab_name ? ` · ${o.tab_name}` : ""}

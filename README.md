@@ -6,6 +6,7 @@ Internal POS for the Twisted Minds cafe. Replaces Loyverse (counter) and POS2 (r
 - **Room orders**: each room has a QR card + a room code. Staff scan, enter the code and their name, and order. No tables.
 - **Orders board**: the barista view lives on the same tablet. New → Preparing → Ready → Delivered, with a chime on new room orders.
 - **Tabs**: charge employees, settle later (cash, card, payroll, write-off).
+- **Rewards**: employees earn points per SAR spent and use them at the counter (staff only).
 - **Reports**: sales by item, category, payment, walk-in vs room, room, hour, day, staff, customer. CSV export.
 - **Live**: menus, sold-out items and order status update instantly over websockets.
 
@@ -23,7 +24,24 @@ Production build on any machine: `npm run build && npm start`, then open http://
 
 Works on any 64-bit Linux (Ubuntu 22.04/24.04, Debian 12…). Everything lives in one data folder: `cafe.db` (SQLite), `.secret` (session key) and `backups/`.
 
-### Option A: Docker (recommended)
+### Quick install: ready-made image (easiest)
+
+Every push to `main` publishes an image to `ghcr.io/mjebreen/twisted-cafe` (amd64 + arm64). On the server you only need Docker:
+
+```bash
+sudo apt install -y docker.io docker-compose-v2      # or Docker's own install script
+sudo mkdir -p /opt/twisted-cafe && cd /opt/twisted-cafe
+sudo curl -fsSLO https://raw.githubusercontent.com/Mjebreen/twisted-cafe/main/deploy/compose.yml
+sudo docker compose -f compose.yml up -d
+curl -s localhost:8080/api/health                    # {"ok":true,...}
+```
+
+- **Update:** `sudo docker compose -f compose.yml pull && sudo docker compose -f compose.yml up -d` (the database is kept).
+- Pin a version instead of `latest` by editing the image line, e.g. `ghcr.io/mjebreen/twisted-cafe:1.4.0`.
+- Or without compose: `docker run -d --name twisted-cafe --restart unless-stopped -p 8080:8080 -v cafe-data:/data ghcr.io/mjebreen/twisted-cafe:latest`
+- Backups and moving an existing database over work the same as Option A (`deploy/backup-docker.sh`, `deploy/restore-docker.sh`).
+
+### Option A: Docker, built from source
 
 ```bash
 sudo apt install -y docker.io docker-compose-v2 git
@@ -77,7 +95,7 @@ Then set **Settings → Public URL** to that address and reprint the room QR car
 1. Sign in with PIN **1234** (Admin). Go to **Team** and change it straight away. Add a PIN for each barista.
 2. **Settings → Public URL**: set it to the address phones use on the office Wi-Fi, e.g. `http://<server-ip>:8080`. The room QR codes use this. Give the server a fixed IP (DHCP reservation) so the QR codes keep working.
 3. **Menu**: the starter menu is copied from the CafeMenu project. Edit prices, Arabic names and options (Size, Milk, Sugar…). To bring in the Loyverse menu, export items from Loyverse as CSV and use the upload button (needs `Name`, `Category`, `Price` columns).
-4. **Rooms**: add each room, then **Print all cards** (A4, 4 per page). Put one card in each room.
+4. **Rooms**: add each room, then **Print all cards** (A4 landscape, 2 A5 cards per sheet, cut down the middle). Put one card in each room.
 5. **Team → Employees**: add staff names so they autocomplete in room orders and tabs.
 
 ## Import from POS2
@@ -96,6 +114,16 @@ People type their names differently ("Sara", "sara ahmed", "Sarah Ahmed"). Once 
 - **Pick names myself** lets you select any names and type the correct spelling to keep.
 
 Merging moves every past order, tab charge and tab payment to the kept name, so tab balances and reports combine. It can't be undone, and each merge is recorded in the activity log.
+
+## Employee rewards (staff only)
+
+Employees earn points when an order with their name is paid by cash, card or tab (the tab name counts for tab orders). Free orders earn nothing. Defaults: 1 point per SAR paid, 20 points = SAR 1 off (about 5% back). Admins change these, or switch rewards off, on the **Rewards** page.
+
+- **Counter:** type the employee's name. If they have points, the cart shows their balance; tap **Use points** to take off as much as the order needs.
+- **Rewards page:** every employee's balance and full history. Admins can add or remove points by hand (a reason is required), e.g. a bonus or a fix.
+- Room order pages never show points; only staff see and use them.
+- Cancelling an order takes back the points it earned and returns any points spent on it. Undoing a payment removes the points it earned. Merging names also merges points.
+- Points apply from now on; orders before rewards existed don't earn any. Point changes appear in the activity log, and Reports counts points used as discounts.
 
 ## Discount codes
 

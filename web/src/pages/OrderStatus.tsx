@@ -87,6 +87,12 @@ export default function OrderStatus({ token }: { token: string }) {
               <span className="font-stat">−<Money v={o.discount} /></span>
             </div>
           )}
+          {o.reward_discount > 0 && (
+            <div className="flex justify-between gap-3 py-1.5 font-semibold text-primary">
+              <span>{ar ? "نقاط المكافآت" : "Reward points"}</span>
+              <span className="font-stat">−<Money v={o.reward_discount} /></span>
+            </div>
+          )}
           <div className="flex justify-between items-center border-t-2 border-dashed border-border mt-3 pt-3 text-xl font-black">
             <span>{ar ? "المجموع" : "Total"}</span>
             <Money v={o.total} className="text-2xl" />

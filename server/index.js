@@ -18,6 +18,7 @@ import { summary, itemsCsv, ordersCsv } from "./reports.js";
 import { importPos2 } from "./importPos2.js";
 import { auditMiddleware, setLogListener } from "./audit.js";
 import { allNames, duplicateGroups, mergeNames, ignorePair } from "./people.js";
+import { rewardBalances, rewardHistory, adjustPoints, balanceOf, rewardConfig, pointsValue } from "./rewards.js";
 
 const PORT = Number(process.env.PORT || 8080);
 const HOST = process.env.HOST || "0.0.0.0";
@@ -141,8 +142,8 @@ app.post("/api/public/rooms/:slug/verify", (req, res) => {
   const r = roomBySlug(req.params.slug);
   if (!r || !r.active) throw new HttpError(404, "Room not found");
   if (!sameCode(req.body?.code, r.code)) throw new HttpError(403, "Wrong room code. Check the card in the room.");
-  const people = db.prepare("SELECT name FROM people WHERE active = 1 ORDER BY name").all().map((p) => p.name);
-  res.json({ ok: true, people });
+  // Employee names are never sent to phones; people type their own name.
+  res.json({ ok: true, people: [] });
 });
 app.get("/api/public/menu", (_req, res) => {
   res.json(menuPayload({ publicOnly: true }));
@@ -347,6 +348,7 @@ app.post("/api/orders", staff, (req, res) => {
     source: room ? "room" : "counter", room, customerName: b.customerName, note: b.note, lines, payment,
     status: b.sendToBar === false ? "completed" : "new", userId: req.user.id,
     discountCode: cleanText(b.discountCode, 40) || null,
+    rewardPoints: Math.trunc(Number(b.rewardPoints) || 0) || null,
   });
   emitOrder(id);
   res.json(getOrder(id));
@@ -407,6 +409,20 @@ app.post("/api/tabs/:name/pay", staff, (req, res) => {
     .run(cleanText(req.params.name, 60), amount, method, cleanText(req.body?.note, 200), req.user.id, nowIso(), localParts().day);
   io.to("staff").emit("tabs-changed");
   res.json({ ok: true });
+});
+
+// ── Rewards (staff-only employee points) ─────────────────────────
+app.get("/api/rewards", staff, (_req, res) => res.json({ config: rewardConfig(), balances: rewardBalances() }));
+app.get("/api/rewards/balance", staff, (req, res) => {
+  const name = cleanText(req.query.name, 60);
+  const points = balanceOf(name);
+  res.json({ name, points, value: pointsValue(points) });
+});
+app.get("/api/rewards/:name", staff, (req, res) => res.json(rewardHistory(req.params.name)));
+app.post("/api/rewards/:name/adjust", admin, (req, res) => {
+  const r = adjustPoints(req.params.name, req.body?.points, req.body?.note, req.user.id);
+  io.to("staff").emit("rewards-changed");
+  res.json(r);
 });
 
 // ── People (employees for autocomplete + tabs) ────────────────────
@@ -543,7 +559,19 @@ app.patch("/api/users/:id", admin, (req, res) => {
 // ── Settings ──────────────────────────────────────────────────────
 app.get("/api/settings", staff, (_req, res) => res.json(getSettings()));
 app.put("/api/settings", admin, (req, res) => {
-  const s = setSettings(req.body || {});
+  const b = { ...(req.body || {}) };
+  if ("rewardsEnabled" in b) b.rewardsEnabled = b.rewardsEnabled === "1" || b.rewardsEnabled === true ? "1" : "0";
+  if ("rewardEarnPerSar" in b) {
+    const n = Number(b.rewardEarnPerSar);
+    if (!(n >= 0 && n <= 100)) throw new HttpError(400, "Points per SAR must be 0-100");
+    b.rewardEarnPerSar = String(n);
+  }
+  if ("rewardPointsPerSar" in b) {
+    const n = Math.trunc(Number(b.rewardPointsPerSar));
+    if (!(n >= 1 && n <= 10000)) throw new HttpError(400, "Points for SAR 1 must be 1-10000");
+    b.rewardPointsPerSar = String(n);
+  }
+  const s = setSettings(b);
   io.emit("settings-changed");
   res.json(s);
 });

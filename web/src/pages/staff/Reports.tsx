@@ -11,7 +11,7 @@ type ItemRow = { name: string; category: string; qty: number; sales: number; com
 type Summary = {
   from: string; to: string;
   totals: { orders: number; sales: number; comp: number; unpaid: number; on_tab: number; items_sold: number;
-    cancelled_orders: number; cancelled_value: number; avg_order: number; avg_prep_min: number | null; discounts: number };
+    cancelled_orders: number; cancelled_value: number; avg_order: number; avg_prep_min: number | null; discounts: number; rewards: number };
   byPayment: G[]; bySource: G[]; byRoom: G[]; byDay: G[]; byHour: G[]; byStaff: G[]; byCustomer: G[];
   items: ItemRow[]; categories: { key: string; qty: number; sales: number }[];
   tabPayments: { key: string; n: number; amount: number }[];
@@ -71,7 +71,7 @@ export default function Reports() {
             <Stat label="Items sold">{t.items_sold}</Stat>
             <Stat label="On tabs"><Money v={t.on_tab} /></Stat>
             <Stat label="Unpaid" warn={t.unpaid > 0}><Money v={t.unpaid} /></Stat>
-            <Stat label="Discounts"><Money v={t.discounts} /></Stat>
+            <Stat label="Discounts"><Money v={t.discounts + (t.rewards || 0)} />{t.rewards > 0 && <div className="text-xs text-muted font-semibold">incl. <Money v={t.rewards} /> points</div>}</Stat>
             <Stat label="Free / comp"><Money v={t.comp} /></Stat>
             <Stat label="Avg prep">{t.avg_prep_min != null ? `${t.avg_prep_min} min` : "–"}</Stat>
           </div>

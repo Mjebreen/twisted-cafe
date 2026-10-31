@@ -14,7 +14,8 @@ export function summary(from, to) {
       COALESCE(SUM(CASE WHEN o.payment_method='free' THEN o.total END),0) AS comp,
       COALESCE(SUM(CASE WHEN o.payment_status='unpaid' THEN o.total END),0) AS unpaid,
       COALESCE(SUM(CASE WHEN o.payment_method='tab' THEN o.total END),0) AS on_tab,
-      COALESCE(SUM(CASE WHEN ${SALE} THEN o.discount END),0) AS discounts
+      COALESCE(SUM(CASE WHEN ${SALE} THEN o.discount END),0) AS discounts,
+      COALESCE(SUM(CASE WHEN ${SALE} THEN o.reward_discount END),0) AS rewards
     ${BASE}`).get(...a);
   const items_sold = db.prepare(`SELECT COALESCE(SUM(oi.qty),0) AS n FROM order_items oi JOIN orders o ON o.id=oi.order_id
     WHERE o.local_day BETWEEN ? AND ? AND o.status != 'cancelled'`).get(...a).n;
@@ -69,6 +70,11 @@ export function summary(from, to) {
     items,
     categories,
     tabPayments,
+    points: db.prepare(`SELECT
+        COALESCE(SUM(CASE WHEN kind='earn' THEN points END),0) AS earned,
+        COALESCE(-SUM(CASE WHEN kind='redeem' THEN points END),0) AS spent,
+        COALESCE(SUM(CASE WHEN kind='adjust' THEN points END),0) AS adjusted
+      FROM reward_ledger WHERE local_day BETWEEN ? AND ?`).get(...a),
   };
 }
 
@@ -100,7 +106,7 @@ export function ordersCsv(from, to) {
     ["Day", (r) => r.local_day], ["Order #", (r) => r.number], ["Created (UTC)", (r) => r.created_at],
     ["Source", (r) => r.source], ["Room", (r) => r.room_name], ["Customer", (r) => r.customer_name],
     ["Items", (r) => r.lines], ["Subtotal (SAR)", (r) => sar(r.subtotal ?? r.total)], ["Discount (SAR)", (r) => sar(r.discount || 0)],
-    ["Discount code", (r) => r.discount_code], ["Total (SAR)", (r) => sar(r.total)], ["Status", (r) => r.status],
+    ["Discount code", (r) => r.discount_code], ["Points used", (r) => r.reward_points || 0], ["Points value (SAR)", (r) => sar(r.reward_discount || 0)], ["Total (SAR)", (r) => sar(r.total)], ["Status", (r) => r.status],
     ["Payment", (r) => r.payment_status], ["Method", (r) => r.payment_method], ["Tab", (r) => r.tab_name],
     ["Staff", (r) => r.staff], ["Note", (r) => r.note], ["Cancel reason", (r) => r.cancel_reason],
   ]);

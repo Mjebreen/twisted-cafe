@@ -79,7 +79,8 @@ function describe(req, res, before, body) {
         category: "order",
         message: `${body?.source === "room" ? `Order for ${body?.room_name}` : "Counter sale"} #${body?.number} · ${sar(body?.total)} · ${
           body?.payment_status === "paid" ? `paid ${body?.payment_method}${body?.tab_name ? ` (${body.tab_name})` : ""}` : "unpaid"}${
-          body?.customer_name ? ` · ${body.customer_name}` : ""}${body?.discount_code ? ` · code ${body.discount_code} −${sar(body.discount)}` : ""}`,
+          body?.customer_name ? ` · ${body.customer_name}` : ""}${body?.discount_code ? ` · code ${body.discount_code} −${sar(body.discount)}` : ""}${
+          body?.reward_points ? ` · ${body.reward_points} points −${sar(body.reward_discount)}` : ""}`,
       } : null;
     case "POST /api/orders/:id/status":
       return ok ? { category: "order", message: `Order ${ORDER_LABEL(before)}: ${STATUS[before?.status] || before?.status} → ${STATUS[b.status] || b.status}${b.reason ? ` (reason: ${b.reason})` : ""}` } : null;
@@ -87,6 +88,9 @@ function describe(req, res, before, body) {
       return ok ? { category: "payment", message: `Order ${ORDER_LABEL(before)} paid ${b.method}${b.tabName ? ` to ${b.tabName}'s tab` : ""} · ${sar(before?.total)}` } : null;
     case "POST /api/orders/:id/unpay":
       return ok ? { category: "payment", message: `Payment undone on order ${ORDER_LABEL(before)} (was ${before?.payment_method}, ${sar(before?.total)})` } : null;
+    case "POST /api/rewards/:name/adjust":
+      return ok ? { category: "reward", message: `${body?.points > 0 ? "Added" : "Removed"} ${Math.abs(body?.points)} points ${body?.points > 0 ? "to" : "from"} ${body?.name} (${b.note}) · balance ${body?.balance}` }
+        : { category: "reward", ok: false, message: `Points change for ${req.params.name} refused${err}` };
     case "POST /api/tabs/:name/pay":
       return ok ? { category: "tab", message: `Tab payment from ${req.params.name}: ${sar(b.amount)} by ${b.method}${b.note ? ` (${b.note})` : ""}` } : null;
     case "POST /api/categories":

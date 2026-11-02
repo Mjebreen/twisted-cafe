@@ -147,6 +147,14 @@ Admins see **Logs** in the top bar: sign-ins (and wrong PINs), sales, room order
 
 Receipts are printed through Chrome's print dialog. Pick the roll width in **Settings → Receipt paper width**: 80mm or 58mm.
 
+**Direct Bluetooth printing (like Loyverse, no print dialog)**: tap the **printer button** in the staff top bar → **Connect Bluetooth printer** → pick the printer (e.g. `PT-210_20E7`) → **Test print**. From then on every receipt on that tablet prints straight to it (auto-print after a sale too). The receipt is drawn as an image, so Arabic prints fine. Chrome only allows Bluetooth on a secure page:
+- Use the app over **https://** (e.g. Cloudflare Tunnel or a reverse proxy with a certificate), **or**
+- On the tablet, open `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, add the app address (e.g. `http://192.168.1.50:8080`), set it to Enabled, and relaunch Chrome.
+
+The printer is remembered per device. If it sleeps, the app reconnects on the next print; if that fails, tap the printer button → **Reconnect**. If prints come out cut or garbled, tick **Slow mode** there. Printers with only classic Bluetooth (no BLE) can connect from desktop Chrome through **Bluetooth serial**.
+
+**Print dialog instead**: the fallback setups below.
+
 **GOOJPRT PT-210 (58mm Bluetooth)**: set the paper width to 58mm first. The printer's built-in fonts have no Arabic, so print the receipt as an image (both setups below do that).
 - *Android tablet*: pair the printer in Bluetooth settings (PIN `0000` or `1234`). Install **RawBT**, choose the printer (e.g. `PT-210_20E7`), and set the paper to 58mm / 384 dots. Turn on RawBT under Android **Settings → Connected devices → Printing**. In Chrome's print dialog pick RawBT.
 - *Windows PC*: pair the printer, install the GOOJPRT "POS-58" driver on the Bluetooth COM port, and set the paper to 58mm. In Chrome's print dialog pick it, with Margins: None and Scale 100.

@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { api, type Menu, type Order, type Room, type Settings, type User } from "../../lib/api";
 import { chime, getSocket } from "../../lib/realtime";
 import { useToast } from "../../components/Toast";
+import { hasPrinter, printReceipt } from "../../lib/printer";
 
 type Ctx = {
   user: User;
@@ -57,9 +58,14 @@ export function StaffProvider({ user, onLogout, children }: { user: User; onLogo
     });
   }, []);
 
+  // A Bluetooth printer connected on this device prints directly; otherwise use the browser print dialog.
   const printOrder = useCallback((id: number) => {
+    if (hasPrinter()) {
+      printReceipt(id).catch((e) => toast(`Printer: ${(e as Error).message}`, "err"));
+      return;
+    }
     window.open(`/staff/print/${id}?auto=1`, "_blank", "width=420,height=700");
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     loadOrders(); reloadMenu(); reloadRooms(); reloadSettings(); reloadPeople();

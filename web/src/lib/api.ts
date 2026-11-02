@@ -81,3 +81,13 @@ export function cartPayload(cart: CartLine[]) {
 export function lineKey(itemId: number, picks: { g: number; c: number }[], note: string) {
   return `${itemId}|${picks.map((p) => `${p.g}.${p.c}`).sort().join(",")}|${note}`;
 }
+
+/** GET /api/orders/:id/receipt: everything needed to print a receipt / simplified tax invoice. */
+export type ReceiptData = {
+  order: Order;
+  seller: { name: string; nameAr: string; address: string; vatNumber: string; crNumber: string; footer: string; timezone: string; paper: 58 | 80 };
+  invoice: {
+    kind: "tax" | "receipt" | "slip" | "cancelled"; no: string; issuedAt: string; rate: number; vat: number; net: number;
+    vatNumberValid: boolean; free: boolean; qr: string | null;
+  };
+};

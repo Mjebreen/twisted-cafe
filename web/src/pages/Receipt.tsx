@@ -1,26 +1,21 @@
 // 80mm receipt, bilingual (Arabic + English). For paid orders with a valid VAT number it is a
 // ZATCA "simplified tax invoice": title, seller + VAT no, invoice no, date, items, VAT, total, QR.
 import { useEffect, useState, type ReactNode } from "react";
-import { api, type Order } from "../lib/api";
+import { api, type ReceiptData } from "../lib/api";
 import { PAY_LABEL } from "../lib/format";
 
-type Kind = "tax" | "receipt" | "slip" | "cancelled";
-type ReceiptData = {
-  order: Order;
-  seller: { name: string; nameAr: string; address: string; vatNumber: string; crNumber: string; footer: string; timezone: string; paper: 58 | 80 };
-  invoice: { kind: Kind; no: string; issuedAt: string; rate: number; vat: number; net: number; vatNumberValid: boolean; free: boolean; qr: string | null };
-};
+type Kind = ReceiptData["invoice"]["kind"];
 
-const TITLE: Record<Kind, [string, string]> = {
+export const TITLE: Record<Kind, [string, string]> = {
   tax: ["Simplified Tax Invoice", "فاتورة ضريبية مبسطة"],
   receipt: ["Receipt", "إيصال"],
   slip: ["Order slip · not paid", "طلب · غير مدفوع"],
   cancelled: ["CANCELLED", "ملغي"],
 };
-const PAY_AR: Record<string, string> = {
+export const PAY_AR: Record<string, string> = {
   cash: "نقداً", card: "بطاقة", tab: "على الحساب", free: "مجاني",
 };
-const money = (h: number) => ((h || 0) / 100).toFixed(2);
+export const money = (h: number) => ((h || 0) / 100).toFixed(2);
 
 /** English label left, Arabic label right, value at the end. */
 function Line({ en, ar, v, big }: { en: string; ar: string; v?: ReactNode; big?: boolean }) {
@@ -34,7 +29,7 @@ function Line({ en, ar, v, big }: { en: string; ar: string; v?: ReactNode; big?:
 }
 
 /** "2026-11-02 16:29" in the cafe timezone; falls back to Riyadh if the setting is not a valid zone. */
-function formatWhen(iso: string, tz: string) {
+export function formatWhen(iso: string, tz: string) {
   const opts: Intl.DateTimeFormatOptions = { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" };
   let f: Intl.DateTimeFormat;
   try { f = new Intl.DateTimeFormat("en-CA", { ...opts, timeZone: tz || "Asia/Riyadh" }); }

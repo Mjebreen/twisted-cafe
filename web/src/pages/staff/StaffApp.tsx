@@ -7,6 +7,7 @@ import {
 import { api, type User } from "../../lib/api";
 import { reconnectSocket, unlockAudio } from "../../lib/realtime";
 import { StaffProvider, useStaff } from "./StaffContext";
+import { PrinterButton } from "../../components/PrinterButton";
 import { TwistPattern } from "../../components/Brand";
 import Counter from "./Counter";
 import Board from "./Board";
@@ -160,6 +161,7 @@ function Shell() {
         <span className="px-2" title={sound ? "Sound on" : "Tap anywhere to enable sound"}>
           {sound ? <Volume2 size={18} className="text-white/70" /> : <VolumeX size={18} className="text-yellow" />}
         </span>
+        <PrinterButton paper={settings?.receiptPaper === "58" ? 58 : 80} />
         <span className="text-sm font-bold text-white/70 px-2 whitespace-nowrap">{user.name}</span>
         <button className="btn btn-ghost p-2 text-white hover:bg-white/10" onClick={logout} aria-label="Log out"><LogOut size={18} /></button>
       </header>

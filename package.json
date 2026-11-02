@@ -1,6 +1,6 @@
 {
   "name": "twisted-cafe",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "private": true,
   "type": "module",
   "description": "Internal POS for the Twisted Minds cafe: counter walk-ins, room QR orders, barista board, tabs, sales reports.",

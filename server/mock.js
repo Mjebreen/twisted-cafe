@@ -141,8 +141,8 @@ function add() {
       ).lastInsertRowid;
       track("order", id);
       for (const b of built) {
-        db.prepare(`INSERT INTO order_items(order_id, item_id, name, category_name, qty, unit_price, options_text, note, line_total)
-          VALUES(?,?,?,?,?,?,?,?,?)`).run(id, b.it.id, b.it.name, b.it.category_name, b.qty, b.unit, b.labels, "", b.unit * b.qty);
+        db.prepare(`INSERT INTO order_items(order_id, item_id, name, name_ar, category_name, qty, unit_price, options_text, note, line_total)
+          VALUES(?,?,?,?,?,?,?,?,?,?)`).run(id, b.it.id, b.it.name, b.it.name_ar || "", b.it.category_name, b.qty, b.unit, b.labels, "", b.unit * b.qty);
         lines++;
       }
       orders++;

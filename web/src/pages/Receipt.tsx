@@ -8,7 +8,7 @@ type Kind = "tax" | "receipt" | "slip" | "cancelled";
 type ReceiptData = {
   order: Order;
   seller: { name: string; nameAr: string; address: string; vatNumber: string; crNumber: string; footer: string; timezone: string };
-  invoice: { kind: Kind; no: string; issuedAt: string; rate: number; vat: number; net: number; vatNumberValid: boolean; qr: string | null };
+  invoice: { kind: Kind; no: string; issuedAt: string; rate: number; vat: number; net: number; vatNumberValid: boolean; free: boolean; qr: string | null };
 };
 
 const TITLE: Record<Kind, [string, string]> = {
@@ -17,7 +17,9 @@ const TITLE: Record<Kind, [string, string]> = {
   slip: ["Order slip · not paid", "طلب · غير مدفوع"],
   cancelled: ["CANCELLED", "ملغي"],
 };
-const PAY_AR: Record<string, string> = { cash: "نقداً", card: "بطاقة", tab: "على الحساب", free: "مجاني" };
+const PAY_AR: Record<string, string> = {
+  cash: "نقداً", card: "بطاقة", tab: "على الحساب", free: "مجاني",
+};
 const money = (h: number) => ((h || 0) / 100).toFixed(2);
 
 /** English label left, Arabic label right, value at the end. */
@@ -29,6 +31,15 @@ function Line({ en, ar, v, big }: { en: string; ar: string; v?: ReactNode; big?:
       {v !== undefined && <span className="rc-v">{v}</span>}
     </div>
   );
+}
+
+/** "2026-11-02 16:29" in the cafe timezone; falls back to Riyadh if the setting is not a valid zone. */
+function formatWhen(iso: string, tz: string) {
+  const opts: Intl.DateTimeFormatOptions = { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" };
+  let f: Intl.DateTimeFormat;
+  try { f = new Intl.DateTimeFormat("en-CA", { ...opts, timeZone: tz || "Asia/Riyadh" }); }
+  catch { f = new Intl.DateTimeFormat("en-CA", { ...opts, timeZone: "Asia/Riyadh" }); }
+  return f.format(new Date(iso)).replace(",", "");
 }
 
 export function Receipt({ id }: { id: string }) {
@@ -54,10 +65,7 @@ export function Receipt({ id }: { id: string }) {
   if (err) return <div className="p-6">{err}</div>;
   if (!r) return null;
   const { order: o, seller: s, invoice: inv } = r;
-  const when = new Intl.DateTimeFormat("en-CA", {
-    timeZone: s.timezone || "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
-  }).format(new Date(inv.issuedAt)).replace(",", "");
+  const when = formatWhen(inv.issuedAt, s.timezone);
   const subtotal = o.subtotal ?? o.total + o.discount + (o.reward_discount || 0);
   const [titleEn, titleAr] = TITLE[inv.kind];
   const method = o.payment_method || "";
@@ -69,7 +77,11 @@ export function Receipt({ id }: { id: string }) {
         <button className="btn btn-primary" onClick={() => window.print()}>Print</button>
         <button className="btn" onClick={() => window.close()}>Close</button>
         {inv.kind === "receipt" && (
-          <span className="text-sm text-ink">No valid VAT number in Settings, so this prints as a plain receipt, not a tax invoice.</span>
+          <span className="text-sm text-ink">
+            {inv.free
+              ? "Free order: prints as a plain receipt, not a tax invoice."
+              : "No valid VAT number in Settings, so this prints as a plain receipt, not a tax invoice."}
+          </span>
         )}
         {inv.kind === "tax" && !s.nameAr && <span className="text-sm text-ink">Tip: add the Arabic cafe name in Settings.</span>}
       </div>
@@ -115,9 +127,9 @@ export function Receipt({ id }: { id: string }) {
         ))}
         {o.note && <div style={{ marginTop: 4 }}>Note · <span dir="rtl">ملاحظة</span>: {o.note}</div>}
         <div className="rc-hr" />
-        {(o.discount > 0 || o.reward_discount > 0) && <Line en="Subtotal" ar="المجموع" v={money(subtotal)} />}
+        {(o.discount > 0 || o.reward_discount > 0) && <Line en="Subtotal" ar="المجموع الفرعي" v={money(subtotal)} />}
         {o.discount > 0 && <Line en={`Discount ${o.discount_code ?? ""}`} ar="الخصم" v={`-${money(o.discount)}`} />}
-        {o.reward_discount > 0 && <Line en={`Points (${o.reward_points})`} ar="نقاط" v={`-${money(o.reward_discount)}`} />}
+        {o.reward_discount > 0 && <Line en={`Points (${o.reward_points})`} ar="خصم النقاط" v={`-${money(o.reward_discount)}`} />}
         {vatOn && <Line en="Total excl. VAT" ar="الإجمالي قبل الضريبة" v={money(inv.net)} />}
         {vatOn && <Line en={`VAT ${inv.rate}%`} ar={`ضريبة القيمة المضافة`} v={money(inv.vat)} />}
         <Line big en={vatOn ? "Total incl. VAT" : "Total"} ar={vatOn ? "الإجمالي شامل الضريبة" : "الإجمالي"} />

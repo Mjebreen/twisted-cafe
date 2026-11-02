@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 import { db, tx, setSettings } from "./db.js";
 import { localParts } from "./orders.js";
+import { isTimeZone } from "./receipt.js";
 
 // Arabic names for known items (POS2 export has none).
 const AR = {
@@ -99,7 +100,7 @@ export function importPos2(data, { orders: withOrders = true, replaceMenu = true
       roomByTable.set(t.id, r);
     }
 
-    if (data.tenant?.timezone) setSettings({ timezone: data.tenant.timezone });
+    if (isTimeZone(data.tenant?.timezone)) setSettings({ timezone: data.tenant.timezone });
     if (data.tenant?.name) setSettings({ cafeName: `${data.tenant.name} Cafe` });
     const vat = (data.taxes || []).find((t) => t.id === data.tenant?.default_tax_id);
     if (vat) setSettings({ vatRate: String(vat.rate_percent) });
@@ -139,11 +140,12 @@ export function importPos2(data, { orders: withOrders = true, replaceMenu = true
           cancelled ? (o.status === "pending" ? "Left open in POS2" : `Cancelled in POS2${o.cancelled_by ? ` (${o.cancelled_by})` : ""}`) : null,
           iso, iso, cancelled ? null : (paidAt || iso), paid ? paidAt : null, ref,
         ).lastInsertRowid;
+        const arOf = (itemId) => (itemId ? db.prepare("SELECT name_ar FROM items WHERE id = ?").get(itemId)?.name_ar || "" : "");
         for (const i of use) {
           const p = products.get(i.product_id);
           const catKey = p?.subcategory || p?.category || "";
-          db.prepare(`INSERT INTO order_items(order_id, item_id, name, category_name, qty, unit_price, options_text, note, line_total)
-            VALUES(?,?,?,?,?,?,?,?,?)`).run(id, productItem.get(i.product_id) ?? null, i.product_name || p?.name || "Item",
+          db.prepare(`INSERT INTO order_items(order_id, item_id, name, name_ar, category_name, qty, unit_price, options_text, note, line_total)
+            VALUES(?,?,?,?,?,?,?,?,?,?)`).run(id, productItem.get(i.product_id) ?? null, i.product_name || p?.name || "Item", arOf(productItem.get(i.product_id)),
             (CAT[catKey] || [catKey])[0], i.quantity, i.price_cents,
             String(i.customization_summary || i.line_modifiers_summary || "").slice(0, 200), i.notes || "", i.price_cents * i.quantity);
         }

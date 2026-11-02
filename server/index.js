@@ -18,7 +18,7 @@ import { summary, itemsCsv, ordersCsv } from "./reports.js";
 import { importPos2 } from "./importPos2.js";
 import { auditMiddleware, setLogListener } from "./audit.js";
 import { allNames, duplicateGroups, mergeNames, ignorePair } from "./people.js";
-import { receiptFor, isVatNumber } from "./receipt.js";
+import { receiptFor, isVatNumber, isTimeZone } from "./receipt.js";
 import { rewardBalances, rewardHistory, adjustPoints, balanceOf, rewardConfig, pointsValue } from "./rewards.js";
 
 const PORT = Number(process.env.PORT || 8080);
@@ -580,8 +580,11 @@ app.put("/api/settings", admin, (req, res) => {
   }
   if ("vatNumber" in b) {
     b.vatNumber = String(b.vatNumber ?? "").replace(/\s/g, "");
-    if (b.vatNumber && !isVatNumber(b.vatNumber)) throw new HttpError(400, "VAT number must be 15 digits, starting and ending with 3");
+    // Only check a changed value, so an old free-text VAT number doesn't block saving other settings.
+    if (b.vatNumber && b.vatNumber !== getSettings().vatNumber.replace(/\s/g, "") && !isVatNumber(b.vatNumber)) throw new HttpError(400, "VAT number must be 15 digits, starting and ending with 3");
   }
+  if ("timezone" in b && !isTimeZone(b.timezone)) throw new HttpError(400, "Timezone must be a name like Asia/Riyadh");
+  if ("cafeName" in b) b.cafeName = String(b.cafeName ?? "").trim().slice(0, 100);
   for (const k of ["cafeNameAr", "cafeAddress", "crNumber", "receiptFooter"]) {
     if (k in b) b[k] = String(b[k] ?? "").replace(/[\u0000-\u0009\u000b-\u001f]/g, " ").trim().slice(0, 200);
   }

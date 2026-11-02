@@ -2,7 +2,8 @@ import { Redirect, Route, Switch, useLocation } from "wouter";
 import RoomOrder from "./pages/RoomOrder";
 import OrderStatus from "./pages/OrderStatus";
 import StaffApp from "./pages/staff/StaffApp";
-import { QrSheet, Receipt } from "./pages/Printouts";
+import { QrSheet } from "./pages/Printouts";
+import { Receipt } from "./pages/Receipt";
 import { ToastProvider } from "./components/Toast";
 
 export default function App() {

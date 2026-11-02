@@ -162,13 +162,21 @@ if (!orderCols2.includes("reward_discount")) db.exec("ALTER TABLE orders ADD COL
 // Orders written by importers/older versions have no subtotal: it equals the total.
 db.exec("UPDATE orders SET subtotal = total WHERE subtotal IS NULL");
 db.exec("CREATE INDEX IF NOT EXISTS idx_orders_dcode ON orders(discount_code)");
+// Arabic item name on each sold line (for the bilingual receipt). Older lines take it from the menu once.
+if (!db.prepare("PRAGMA table_info(order_items)").all().some((c) => c.name === "name_ar")) {
+  db.exec("ALTER TABLE order_items ADD COLUMN name_ar TEXT NOT NULL DEFAULT ''");
+  db.exec("UPDATE order_items SET name_ar = COALESCE((SELECT name_ar FROM items WHERE items.id = order_items.item_id), '')");
+}
 
 export const DEFAULT_SETTINGS = {
   cafeName: "Twisted Minds Cafe",
+  cafeNameAr: "",           // Arabic name: receipts must be in Arabic (ZATCA); also the QR seller name
+  cafeAddress: "",          // seller address printed on the tax invoice
+  crNumber: "",             // commercial registration (optional on receipt)
   timezone: process.env.TZ_CAFE || "Asia/Riyadh",
   vatRate: "15",            // prices are VAT-inclusive; receipt shows the VAT part
   vatNumber: "",
-  receiptFooter: "Thank you!",
+  receiptFooter: "Thank you! · شكراً لزيارتكم",
   roomOrdering: "open",     // open | closed
   publicUrl: "",            // base URL printed in room QR codes, e.g. http://192.168.1.50:8080
   autoPrintCounter: "0",    // auto-open receipt after a counter sale

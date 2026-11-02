@@ -150,6 +150,16 @@ Receipts are 80mm pages printed through Chrome's print dialog.
 - **Auto print** after each paid counter sale: Settings → tick "Print receipt automatically".
 - Direct ESC/POS printing (no dialog) is not built in yet.
 
+### Saudi receipts (ZATCA)
+
+Receipts are bilingual (Arabic + English). Set up once in **Settings**: Arabic cafe name (as on the VAT certificate), address, 15-digit VAT number, and optionally the CR number.
+
+- **Paid order + valid VAT number** → printed as **فاتورة ضريبية مبسطة / Simplified Tax Invoice**: seller name and address, VAT number, invoice number (`INV-000123`, unique and in sequence), date and time (cafe timezone), items with quantity, unit price and line total, discounts, total before VAT, VAT 15%, total incl. VAT, payment method, and the ZATCA QR code.
+- The QR holds the 5 Phase 1 fields as Base64 TLV: seller name, VAT number, time (UTC), total incl. VAT, VAT amount. Scanning it with the ZATCA "VAT" app shows these.
+- **No valid VAT number** → prints as a plain "Receipt / إيصال" with no QR.
+- **Unpaid** orders print as an order slip marked "Not a tax invoice". **Cancelled** orders are marked cancelled and carry no QR.
+- Not covered: ZATCA **Phase 2** (Fatoora integration: XML invoice, cryptographic stamp, reporting each invoice to ZATCA within 24 hours) and credit notes for refunds. Businesses whose VAT-taxable revenue went over SAR 187,500 in any year from 2022 to 2025 must integrate by 1 Feb 2027 (Wave 25). That needs a ZATCA-certified e-invoicing provider, or Phase 2 support added to this app.
+
 ## Room codes
 
 The QR on the card never changes. Only the 4-digit code does. Rooms → **New code** (one room) or **New codes for all**, then reprint the card(s). People with the old code are asked for the new one on their next order.

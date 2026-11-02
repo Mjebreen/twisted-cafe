@@ -76,6 +76,7 @@ export function buildLines(input, { forRoom = false } = {}) {
     return {
       item_id: item.id,
       name: item.name,
+      name_ar: item.name_ar || "",
       category_name: item.category_name,
       qty,
       unit_price: unit,
@@ -114,10 +115,10 @@ export function createOrder({ source, room, customerName, note, lines, payPref, 
       d?.code.code ?? null, userId ?? null, iso, iso, status === "completed" ? iso : null,
       red?.points ?? 0, red?.amount ?? 0,
     ).lastInsertRowid;
-    const ins = db.prepare(`INSERT INTO order_items(order_id, item_id, name, category_name, qty, unit_price,
-      options_text, note, line_total) VALUES(?,?,?,?,?,?,?,?,?)`);
+    const ins = db.prepare(`INSERT INTO order_items(order_id, item_id, name, name_ar, category_name, qty, unit_price,
+      options_text, note, line_total) VALUES(?,?,?,?,?,?,?,?,?,?)`);
     for (const l of lines) {
-      ins.run(id, l.item_id, l.name, l.category_name, l.qty, l.unit_price, l.options_text, l.note, l.line_total);
+      ins.run(id, l.item_id, l.name, l.name_ar, l.category_name, l.qty, l.unit_price, l.options_text, l.note, l.line_total);
     }
     if (customerName && source === "room") upsertPerson(customerName);
     if (red) writeRedeem(Number(id), customerName, red.points, userId);

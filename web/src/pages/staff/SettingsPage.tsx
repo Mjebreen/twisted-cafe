@@ -35,6 +35,12 @@ export default function SettingsPage() {
       <h1 className="text-4xl">Settings</h1>
       <div className="space-y-4 mt-4">
         <Row label="Cafe name (receipts, room menu)"><input className="input" value={f.cafeName} onChange={(e) => set("cafeName", e.target.value)} /></Row>
+        <Row label="Arabic name (as on the VAT certificate)" hint="Printed on receipts and used as the seller name in the receipt QR code. Saudi tax invoices must be in Arabic.">
+          <input className="input ar" dir="rtl" placeholder="مقهى تويستد مايندز" value={f.cafeNameAr} onChange={(e) => set("cafeNameAr", e.target.value)} />
+        </Row>
+        <Row label="Address (on receipts)" hint="The seller address is required on a tax invoice. Arabic and English are both fine.">
+          <input className="input" placeholder="Street, district, city" value={f.cafeAddress} onChange={(e) => set("cafeAddress", e.target.value)} />
+        </Row>
         <Row label="Public URL for room QR codes" hint="The address phones on the office Wi-Fi use to reach this server, e.g. http://192.168.1.50:8080 or https://cafe.twisted.local. Leave blank to use the address you are on now.">
           <input className="input" placeholder="http://192.168.x.x:8080" value={f.publicUrl} onChange={(e) => set("publicUrl", e.target.value)} />
         </Row>
@@ -43,8 +49,14 @@ export default function SettingsPage() {
         </Row>
         <div className="grid grid-cols-2 gap-3">
           <Row label="VAT % (prices include VAT)"><input className="input font-stat" value={f.vatRate} onChange={(e) => set("vatRate", e.target.value.replace(/[^\d.]/g, ""))} /></Row>
-          <Row label="VAT number (on receipt)"><input className="input font-stat" value={f.vatNumber} onChange={(e) => set("vatNumber", e.target.value)} /></Row>
+          <Row label="VAT number (on receipt)"><input className="input font-stat" inputMode="numeric" maxLength={15} placeholder="3xxxxxxxxxxxxx3" value={f.vatNumber} onChange={(e) => set("vatNumber", e.target.value.replace(/\D/g, ""))} /></Row>
         </div>
+        <Row label="Commercial registration no. (optional)"><input className="input font-stat" value={f.crNumber} onChange={(e) => set("crNumber", e.target.value)} /></Row>
+        {!/^3\d{13}3$/.test(f.vatNumber) && (
+          <div className="chip bg-yellow text-ink whitespace-normal">
+            No valid VAT number yet, so receipts print as a plain receipt without the tax-invoice QR code. A Saudi VAT number is 15 digits, starting and ending with 3.
+          </div>
+        )}
         <Row label="Receipt footer"><input className="input" value={f.receiptFooter} onChange={(e) => set("receiptFooter", e.target.value)} /></Row>
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={f.autoPrintCounter === "1"} onChange={(e) => set("autoPrintCounter", e.target.checked ? "1" : "0")} />

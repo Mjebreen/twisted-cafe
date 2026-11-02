@@ -32,7 +32,7 @@ export type Item = {
 export type Menu = { categories: Category[]; items: Item[] };
 
 export type OrderItem = {
-  id: number; item_id: number; name: string; category_name: string; qty: number; unit_price: number;
+  id: number; item_id: number; name: string; name_ar?: string; category_name: string; qty: number; unit_price: number;
   options_text: string; note: string; line_total: number;
 };
 export type OrderStatus = "new" | "preparing" | "ready" | "completed" | "cancelled";
@@ -60,7 +60,8 @@ export type DiscountCode = {
 export type Room = { id: number; name: string; slug: string; code: string; active: number; code_changed_at: string; sort: number };
 export type User = { id: number; name: string; role: "admin" | "staff" };
 export type Settings = {
-  cafeName: string; timezone: string; vatRate: string; vatNumber: string; receiptFooter: string;
+  cafeName: string; cafeNameAr: string; cafeAddress: string; crNumber: string;
+  timezone: string; vatRate: string; vatNumber: string; receiptFooter: string;
   roomOrdering: "open" | "closed"; publicUrl: string; autoPrintCounter: string;
   rewardsEnabled: string; rewardEarnPerSar: string; rewardPointsPerSar: string;
 };

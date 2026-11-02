@@ -18,6 +18,7 @@ import { summary, itemsCsv, ordersCsv } from "./reports.js";
 import { importPos2 } from "./importPos2.js";
 import { auditMiddleware, setLogListener } from "./audit.js";
 import { allNames, duplicateGroups, mergeNames, ignorePair } from "./people.js";
+import { receiptFor, isVatNumber } from "./receipt.js";
 import { rewardBalances, rewardHistory, adjustPoints, balanceOf, rewardConfig, pointsValue } from "./rewards.js";
 
 const PORT = Number(process.env.PORT || 8080);
@@ -333,6 +334,12 @@ app.get("/api/orders/:id", staff, (req, res) => {
   if (!o) throw new HttpError(404, "Not found");
   res.json(o);
 });
+// Receipt / simplified tax invoice (bilingual, ZATCA QR).
+app.get("/api/orders/:id/receipt", staff, async (req, res) => {
+  const o = getOrder(int(req.params.id));
+  if (!o) throw new HttpError(404, "Not found");
+  res.json(await receiptFor(o));
+});
 // Counter sale. payment = { method, tabName } or null (pay later).
 app.post("/api/orders", staff, (req, res) => {
   const b = req.body || {};
@@ -570,6 +577,13 @@ app.put("/api/settings", admin, (req, res) => {
     const n = Math.trunc(Number(b.rewardPointsPerSar));
     if (!(n >= 1 && n <= 10000)) throw new HttpError(400, "Points for SAR 1 must be 1-10000");
     b.rewardPointsPerSar = String(n);
+  }
+  if ("vatNumber" in b) {
+    b.vatNumber = String(b.vatNumber ?? "").replace(/\s/g, "");
+    if (b.vatNumber && !isVatNumber(b.vatNumber)) throw new HttpError(400, "VAT number must be 15 digits, starting and ending with 3");
+  }
+  for (const k of ["cafeNameAr", "cafeAddress", "crNumber", "receiptFooter"]) {
+    if (k in b) b[k] = String(b[k] ?? "").replace(/[\u0000-\u0009\u000b-\u001f]/g, " ").trim().slice(0, 200);
   }
   const s = setSettings(b);
   io.emit("settings-changed");

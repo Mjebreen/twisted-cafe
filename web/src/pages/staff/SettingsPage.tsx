@@ -58,6 +58,12 @@ export default function SettingsPage() {
           </div>
         )}
         <Row label="Receipt footer"><input className="input" value={f.receiptFooter} onChange={(e) => set("receiptFooter", e.target.value)} /></Row>
+        <Row label="Receipt paper width" hint="58mm for small Bluetooth printers like the GOOJPRT PT-210. 80mm for standard counter printers.">
+          <select className="input" value={f.receiptPaper || "80"} onChange={(e) => set("receiptPaper", e.target.value)}>
+            <option value="80">80mm</option>
+            <option value="58">58mm (PT-210 and other small printers)</option>
+          </select>
+        </Row>
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={f.autoPrintCounter === "1"} onChange={(e) => set("autoPrintCounter", e.target.checked ? "1" : "0")} />
           Print receipt automatically after each paid counter sale

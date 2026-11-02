@@ -7,7 +7,7 @@ import { PAY_LABEL } from "../lib/format";
 type Kind = "tax" | "receipt" | "slip" | "cancelled";
 type ReceiptData = {
   order: Order;
-  seller: { name: string; nameAr: string; address: string; vatNumber: string; crNumber: string; footer: string; timezone: string };
+  seller: { name: string; nameAr: string; address: string; vatNumber: string; crNumber: string; footer: string; timezone: string; paper: 58 | 80 };
   invoice: { kind: Kind; no: string; issuedAt: string; rate: number; vat: number; net: number; vatNumberValid: boolean; free: boolean; qr: string | null };
 };
 
@@ -85,7 +85,8 @@ export function Receipt({ id }: { id: string }) {
         )}
         {inv.kind === "tax" && !s.nameAr && <span className="text-sm text-ink">Tip: add the Arabic cafe name in Settings.</span>}
       </div>
-      <div className="receipt">
+      <style>{`@media print { @page { size: ${s.paper}mm auto; margin: 0; } }`}</style>
+      <div className={`receipt${s.paper === 58 ? " w58" : ""}`}>
         <div className="rc-center">
           <img src="/logo.png" alt="" className="rc-logo" />
           {s.nameAr && <div className="rc-name" dir="rtl">{s.nameAr}</div>}

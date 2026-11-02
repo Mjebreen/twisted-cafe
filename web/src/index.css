@@ -108,7 +108,6 @@ html[dir="rtl"] body, html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3
 
 /* Receipt printing: 80mm thermal paper */
 @media print {
-  @page { size: 80mm auto; margin: 0; }
   html, body { background: #fff !important; color: #000 !important; }
   .no-print { display: none !important; }
 }
@@ -134,4 +133,20 @@ html[dir="rtl"] body, html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3
 .rc-note { font-weight: 700; margin-top: 4px; }
 .rc-qr { width: 32mm; height: 32mm; margin: 8px auto 0; }
 .rc-qr svg { width: 100%; height: 100%; }
+/* 58mm roll (GOOJPRT PT-210 etc.): 48mm printable. Slightly bolder, since small thermal heads print thin. */
+.receipt.w58 { width: 48mm; padding: 2mm 0 5mm; font-size: 10px; font-weight: 500; line-height: 1.3; }
+.w58 .rc-logo { height: 34px; }
+.w58 .rc-name { font-size: 13px; }
+.w58 .rc-title { font-size: 11.5px; margin-top: 4px; }
+.w58 .rc-line { gap: 4px; }
+.w58 .rc-line .rc-v { min-width: 0; white-space: nowrap; }
+.w58 .rc-line .rc-ar { white-space: nowrap; font-size: 9px; }
+.w58 .rc-line > span:first-child { white-space: nowrap; }
+.w58 .rc-big { font-size: 11px; }
+.w58 .rc-big .rc-ar { font-size: 10px; }
+.w58 .rc-total { font-size: 17px; }
+.w58 .rc-items { grid-template-columns: 1fr 5mm 10mm 11mm; gap: 2px; }
+.w58 .rc-head { font-size: 8.5px; }
+.w58 .rc-sub { font-size: 9.5px; }
+.w58 .rc-qr { width: 30mm; height: 30mm; }
 .qr-sheet { background: #fff; color: #000; }

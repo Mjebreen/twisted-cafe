@@ -584,6 +584,7 @@ app.put("/api/settings", admin, (req, res) => {
     if (b.vatNumber && b.vatNumber !== getSettings().vatNumber.replace(/\s/g, "") && !isVatNumber(b.vatNumber)) throw new HttpError(400, "VAT number must be 15 digits, starting and ending with 3");
   }
   if ("timezone" in b && !isTimeZone(b.timezone)) throw new HttpError(400, "Timezone must be a name like Asia/Riyadh");
+  if ("receiptPaper" in b) b.receiptPaper = String(b.receiptPaper) === "58" ? "58" : "80";
   if ("cafeName" in b) b.cafeName = String(b.cafeName ?? "").trim().slice(0, 100);
   for (const k of ["cafeNameAr", "cafeAddress", "crNumber", "receiptFooter"]) {
     if (k in b) b[k] = String(b[k] ?? "").replace(/[\u0000-\u0009\u000b-\u001f]/g, " ").trim().slice(0, 200);

@@ -66,6 +66,7 @@ export async function receiptFor(o) {
     seller: {
       name: s.cafeName, nameAr: s.cafeNameAr, address: s.cafeAddress, vatNumber: s.vatNumber,
       crNumber: s.crNumber, footer: s.receiptFooter, timezone: s.timezone,
+      paper: s.receiptPaper === "58" ? 58 : 80,
     },
     invoice: {
       kind,

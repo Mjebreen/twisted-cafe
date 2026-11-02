@@ -145,7 +145,11 @@ Admins see **Logs** in the top bar: sign-ins (and wrong PINs), sales, room order
 
 ## Receipt printer
 
-Receipts are 80mm pages printed through Chrome's print dialog.
+Receipts are printed through Chrome's print dialog. Pick the roll width in **Settings → Receipt paper width**: 80mm or 58mm.
+
+**GOOJPRT PT-210 (58mm Bluetooth)**: set the paper width to 58mm first. The printer's built-in fonts have no Arabic, so print the receipt as an image (both setups below do that).
+- *Android tablet*: pair the printer in Bluetooth settings (PIN `0000` or `1234`). Install **RawBT**, choose the printer (e.g. `PT-210_20E7`), and set the paper to 58mm / 384 dots. Turn on RawBT under Android **Settings → Connected devices → Printing**. In Chrome's print dialog pick RawBT.
+- *Windows PC*: pair the printer, install the GOOJPRT "POS-58" driver on the Bluetooth COM port, and set the paper to 58mm. In Chrome's print dialog pick it, with Margins: None and Scale 100.
 - **Network/USB thermal printer on Android**: install the printer maker's print service, or **RawBT**, then pick it in the print dialog.
 - **Auto print** after each paid counter sale: Settings → tick "Print receipt automatically".
 - Direct ESC/POS printing (no dialog) is not built in yet.

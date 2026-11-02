@@ -62,7 +62,7 @@ export type User = { id: number; name: string; role: "admin" | "staff" };
 export type Settings = {
   cafeName: string; cafeNameAr: string; cafeAddress: string; crNumber: string;
   timezone: string; vatRate: string; vatNumber: string; receiptFooter: string;
-  roomOrdering: "open" | "closed"; publicUrl: string; autoPrintCounter: string;
+  roomOrdering: "open" | "closed"; publicUrl: string; autoPrintCounter: string; receiptPaper: string;
   rewardsEnabled: string; rewardEarnPerSar: string; rewardPointsPerSar: string;
 };
 

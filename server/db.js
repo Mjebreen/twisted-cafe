@@ -180,6 +180,7 @@ export const DEFAULT_SETTINGS = {
   roomOrdering: "open",     // open | closed
   publicUrl: "",            // base URL printed in room QR codes, e.g. http://192.168.1.50:8080
   autoPrintCounter: "0",    // auto-open receipt after a counter sale
+  receiptPaper: "80",       // receipt roll width in mm: 80 or 58 (e.g. GOOJPRT PT-210)
   rewardsEnabled: "1",      // employee reward points (staff-only)
   rewardEarnPerSar: "1",    // points earned per 1 SAR paid
   rewardPointsPerSar: "20", // points that make 1 SAR off (20 → 5% back)
